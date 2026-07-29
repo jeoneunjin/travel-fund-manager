@@ -54,6 +54,11 @@ function fetchRoomRaw(where: Prisma.RoomWhereUniqueInput) {
   return prisma.room.findUnique({ where, include: roomInclude });
 }
 
+export async function getRooms(): Promise<Room[]> {
+  const rooms = await prisma.room.findMany({ include: roomInclude, orderBy: { startDate: "asc" } });
+  return rooms.map(toRoom);
+}
+
 export async function getRoom(roomId: string): Promise<Room | undefined> {
   const room = await fetchRoomRaw({ id: roomId });
   return room ? toRoom(room) : undefined;

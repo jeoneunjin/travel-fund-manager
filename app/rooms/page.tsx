@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Plus, MapPin, Users, CalendarDays } from "lucide-react";
-import { mockRooms, statusMeta } from "@/lib/mock-data";
+import { statusMeta } from "@/lib/mock-data";
+import { getRooms } from "@/lib/db/room";
 import { dDayLabel, dateRangeLabel, formatWon, formatWonShort } from "@/lib/format";
 import { PageShell } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
@@ -10,14 +11,15 @@ import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
-export default function RoomsPage() {
+export default async function RoomsPage() {
+  const rooms = await getRooms();
   return (
     <PageShell>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">내 방</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            참여 중인 여행 자금방 {mockRooms.length}개
+            참여 중인 여행 자금방 {rooms.length}개
           </p>
         </div>
         <Button asChild>
@@ -29,7 +31,7 @@ export default function RoomsPage() {
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {mockRooms.map((room) => {
+        {rooms.map((room) => {
           const status = statusMeta[room.status];
           const pct = Math.min(
             100,
