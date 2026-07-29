@@ -11,7 +11,7 @@ import { computeSettlement, getMember, totalExpenses } from "@/lib/mock-data";
 import { formatWon } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-export default function SettlementPage({
+export default async function SettlementPage({
   params,
 }: {
   params: { roomId: string };

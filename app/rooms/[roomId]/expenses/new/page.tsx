@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 import { formatWon } from "@/lib/format";
 import type { ExpenseCategory } from "@/lib/types";
 
-export default function NewExpensePage({
+export default async function NewExpensePage({
   params,
 }: {
   params: { roomId: string };

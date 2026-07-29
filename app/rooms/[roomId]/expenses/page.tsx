@@ -24,7 +24,7 @@ import {
 import { formatDate, formatWon } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-export default function ExpensesPage({
+export default async function ExpensesPage({
   params,
 }: {
   params: { roomId: string };

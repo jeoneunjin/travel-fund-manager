@@ -1,0 +1,91 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+model User {
+  id        String       @id @default(cuid())
+  email     String       @unique
+  name      String
+  avatarUrl String?
+  memberships RoomMember[]
+}
+
+model Room {
+  id             String       @id @default(cuid())
+  title          String
+  destination    String
+  startDate      DateTime
+  endDate        DateTime
+  goalAmount     Int
+  expectedPeople Int
+  status         RoomStatus   @default(SAVING)
+  inviteToken    String       @unique
+  members        RoomMember[]
+  expenses       Expense[]
+  createdAt      DateTime     @default(now())
+}
+
+model RoomMember {
+  id             String   @id @default(cuid())
+  roomId         String
+  userId         String
+  isOwner        Boolean  @default(false)
+  personalGoal   Int
+  personalSaved  Int      @default(0)
+  room           Room     @relation(fields: [roomId], references: [id])
+  user           User     @relation(fields: [userId], references: [id])
+  paidExpenses   Expense[] @relation("Payer")
+  shares         ExpenseShare[]
+
+  @@unique([roomId, userId])
+}
+
+model Expense {
+  id        String          @id @default(cuid())
+  roomId    String
+  title     String
+  amount    Int
+  place     String?
+  category  ExpenseCategory @default(ETC)
+  date      DateTime
+  payerId   String
+  room      Room            @relation(fields: [roomId], references: [id])
+  payer     RoomMember      @relation("Payer", fields: [payerId], references: [id])
+  shares    ExpenseShare[]
+}
+
+model ExpenseShare {
+  id        String     @id @default(cuid())
+  expenseId String
+  memberId  String
+  expense   Expense    @relation(fields: [expenseId], references: [id])
+  member    RoomMember @relation(fields: [memberId], references: [id])
+
+  @@unique([expenseId, memberId])
+}
+
+enum RoomStatus {
+  SAVING
+  TRAVELING
+  SETTLING
+  COMPLETED
+}
+
+enum ExpenseCategory {
+  FOOD
+  LODGING
+  TRANSPORT
+  ACTIVITY
+  SHOPPING
+  ETC
+}

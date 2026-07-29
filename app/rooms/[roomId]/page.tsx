@@ -14,7 +14,7 @@ import {
 import { formatDateShort, formatWon, formatWonShort } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-export default function DashboardPage({
+export default async function DashboardPage({
   params,
 }: {
   params: { roomId: string };
