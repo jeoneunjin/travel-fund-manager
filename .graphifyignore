@@ -1,0 +1,4 @@
+.agents/skills/
+node_modules/
+.next/
+lib/generated/
