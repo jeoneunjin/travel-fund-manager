@@ -2,6 +2,7 @@ export type RoomStatus = "saving" | "traveling" | "settling" | "completed";
 
 export interface Member {
   id: string;
+  userId?: string;
   name: string;
   avatarUrl: string;
   isOwner?: boolean;

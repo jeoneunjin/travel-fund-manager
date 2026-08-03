@@ -28,6 +28,7 @@ function toRoom(dbRoom: DbRoom): Room {
     members: dbRoom.members.map(
       (m): Member => ({
         id: m.id,
+        userId: m.userId,
         name: m.user.name,
         avatarUrl: m.user.avatarUrl ?? "",
         isOwner: m.isOwner,
