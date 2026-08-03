@@ -38,6 +38,10 @@
 - `any` 사용 금지, TypeScript strict mode 유지
 - Tailwind 클래스만 사용, inline style 금지
 - Server Component 우선, Client Component는 상태/이벤트 핸들링이 꼭 필요할 때만
+- `app/rooms/[roomId]/**/page.tsx`는 `withRoom`(서버 전용, `auth()`+DB 조회)을
+  호출하는 서버 컴포넌트로만 두고 `"use client"`를 붙이지 않는다. 상태(`useState` 등)나
+  `useRouter`가 필요하면 `xxx-view.tsx`에 `"use client"` 컴포넌트로 분리해 `room`을
+  prop으로 넘긴다 — `withRoom` 콜백 안에서 훅을 직접 호출하면 lint 에러가 남
 - 컴포넌트 200줄 이하 유지, 함수는 작게 분리
 - Prisma 응답 타입은 손으로 인터페이스 작성하지 말고 `Prisma.XxxGetPayload` 유틸리티 타입 사용
 - 정산/계산 관련 순수 함수(`lib/db/*.ts`)는 UI 로직과 분리 유지
