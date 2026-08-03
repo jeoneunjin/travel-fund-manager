@@ -1,5 +1,6 @@
 // prisma/seed.ts
 import "dotenv/config";
+import bcrypt from "bcryptjs";
 import { PrismaClient } from "@/lib/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
@@ -10,6 +11,9 @@ const avatar = (seed: string) =>
   `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(seed)}`;
 
 async function main() {
+  // 시드 유저 전원 공용 테스트 비밀번호. 로그인 테스트용으로만 사용.
+  const testPasswordHash = await bcrypt.hash("password123", 10);
+
   // 재실행 가능하도록 기존 데이터 정리 (관계 있는 순서 역순으로 삭제)
   await prisma.expenseShare.deleteMany();
   await prisma.expense.deleteMany();
@@ -26,7 +30,7 @@ async function main() {
       { name: "정하늘", seed: "jung" },
     ].map((u) =>
       prisma.user.create({
-        data: { email: `${u.seed}@example.com`, name: u.name, avatarUrl: avatar(u.seed) },
+        data: { email: `${u.seed}@example.com`, name: u.name, avatarUrl: avatar(u.seed), passwordHash: testPasswordHash },
       })
     )
   );
@@ -91,7 +95,7 @@ async function main() {
       { name: "최슬로프", seed: "choi" },
     ].map((u) =>
       prisma.user.create({
-        data: { email: `${u.seed}@example.com`, name: u.name, avatarUrl: avatar(u.seed) },
+        data: { email: `${u.seed}@example.com`, name: u.name, avatarUrl: avatar(u.seed), passwordHash: testPasswordHash },
       })
     )
   );
@@ -146,7 +150,7 @@ async function main() {
       { name: "임돌하", seed: "lim" },
     ].map((u) =>
       prisma.user.create({
-        data: { email: `${u.seed}@example.com`, name: u.name, avatarUrl: avatar(u.seed) },
+        data: { email: `${u.seed}@example.com`, name: u.name, avatarUrl: avatar(u.seed), passwordHash: testPasswordHash },
       })
     )
   );
