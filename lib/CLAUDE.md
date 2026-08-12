@@ -32,6 +32,7 @@
   → import는 `@prisma/client`가 아니라 `@/lib/generated/prisma/client`에서
 - `.env`와 `.env.local`은 다른 파일. `prisma.config.ts`의 `dotenv/config`는
   `.env`만 읽으므로 두 파일에 DB 연결값을 동일하게 유지할 것
+  
 
 ## Rules
 
@@ -61,3 +62,9 @@
 - `npx prisma migrate dev --name <name>`
 - `npx prisma db seed`
 - `npx prisma studio`
+
+## Schema Change Protocol
+schema.prisma를 수정했다면, 작업 요약 맨 앞(또는 완전히 별도 섹션)에
+반드시 이렇게 표시할 것:
+
+⚠️ 마이그레이션 필요: npx prisma migrate dev --name <name>
