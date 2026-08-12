@@ -5,6 +5,7 @@ import { randomBytes } from "crypto";
 import type { Room, Member, Expense, SettlementRow, Transfer } from "@/lib/types";
 
 const INVITE_TOKEN_RETRY_COUNT = 3;
+const JOIN_ROOM_RETRY_COUNT = 3;
 
 export type CreateRoomInput = {
   title: string;
@@ -16,6 +17,12 @@ export type CreateRoomInput = {
   expectedPeople: number;
   ownerId: string;
 };
+
+export class RoomJoinNotAllowedError extends Error {
+  constructor() {
+    super("여행이 시작된 방에는 참여할 수 없습니다.");
+  }
+}
 
 // 쿼리에 실제로 쓰는 include 절 — 이 상수를 타입 계산에도 그대로 재사용함
 const roomInclude = {
@@ -130,6 +137,107 @@ export async function createRoom(input: CreateRoomInput) {
   }
 
   throw new Error("초대 토큰 생성에 실패했습니다.");
+}
+
+async function findExistingRoomMember(token: string, userId: string) {
+  return prisma.room.findUnique({
+    where: { inviteToken: token },
+    select: {
+      id: true,
+      inviteToken: true,
+      members: {
+        where: { userId },
+        select: { id: true },
+      },
+    },
+  });
+}
+
+export async function joinRoomByInviteToken(token: string, userId: string) {
+  for (let attempt = 0; attempt < JOIN_ROOM_RETRY_COUNT; attempt += 1) {
+    try {
+      const result = await prisma.$transaction(
+        async (tx) => {
+          const room = await tx.room.findUnique({
+            where: { inviteToken: token },
+            select: {
+              id: true,
+              inviteToken: true,
+              useSaving: true,
+              goalAmount: true,
+              status: true,
+              members: {
+                where: { userId },
+                select: { id: true },
+              },
+            },
+          });
+
+          if (!room) return null;
+          if (room.members.length > 0) {
+            return { room: { id: room.id, inviteToken: room.inviteToken }, alreadyMember: true };
+          }
+          if (room.status !== "SAVING") throw new RoomJoinNotAllowedError();
+
+          await tx.roomMember.create({
+            data: {
+              roomId: room.id,
+              userId,
+              isOwner: false,
+              personalGoal: 0,
+              personalSaved: 0,
+            },
+          });
+
+          if (room.useSaving) {
+            const members = await tx.roomMember.findMany({
+              where: { roomId: room.id },
+              orderBy: { id: "asc" },
+              select: { id: true },
+            });
+            const baseGoal = Math.floor(room.goalAmount / members.length);
+            const remainder = room.goalAmount % members.length;
+
+            await Promise.all(
+              members.map((member, index) =>
+                tx.roomMember.update({
+                  where: { id: member.id },
+                  data: { personalGoal: baseGoal + (index < remainder ? 1 : 0) },
+                }),
+              ),
+            );
+          }
+
+          return { room: { id: room.id, inviteToken: room.inviteToken }, alreadyMember: false };
+        },
+        { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+      );
+
+      return result;
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+        const existingRoom = await findExistingRoomMember(token, userId);
+        if (existingRoom?.members.length) {
+          return {
+            room: { id: existingRoom.id, inviteToken: existingRoom.inviteToken },
+            alreadyMember: true,
+          };
+        }
+      }
+
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2034" &&
+        attempt < JOIN_ROOM_RETRY_COUNT - 1
+      ) {
+        continue;
+      }
+
+      throw error;
+    }
+  }
+
+  throw new Error("방 참여 처리에 실패했습니다.");
 }
 
 export function totalExpenses(room: Room): number {

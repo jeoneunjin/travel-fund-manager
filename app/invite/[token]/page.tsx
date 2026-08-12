@@ -45,7 +45,9 @@ export default function InvitePage({
 
   const inviteUrl =
     typeof window !== "undefined" ? `${window.location.origin}/invite/${token}` : "";
-  const pct = Math.min(100, Math.round((room.totalSaved / room.goalAmount) * 100));
+  const pct = room.useSaving && room.goalAmount > 0
+    ? Math.min(100, Math.round((room.totalSaved / room.goalAmount) * 100))
+    : 0;
 
   const copy = async (text: string) => {
     try {
@@ -202,10 +204,9 @@ export default function InvitePage({
         </div>
         <ul className="mt-4 space-y-3">
           {room.members.map((m) => {
-            const pct = Math.min(
-              100,
-              Math.round((m.personalSaved / m.personalGoal) * 100)
-            );
+            const pct = room.useSaving && m.personalGoal > 0
+              ? Math.min(100, Math.round((m.personalSaved / m.personalGoal) * 100))
+              : 0;
             return (
               <li key={m.id} className="flex items-center gap-3">
                 <div className="relative">

@@ -20,10 +20,9 @@ export default async function DashboardPage({
   params: { roomId: string };
 }) {
   return withRoom(params.roomId, (room) => {
-    const pct = Math.min(
-      100,
-      Math.round((room.totalSaved / room.goalAmount) * 100)
-    );
+    const pct = room.useSaving && room.goalAmount > 0
+      ? Math.min(100, Math.round((room.totalSaved / room.goalAmount) * 100))
+      : 0;
     const recentExpenses = [...room.expenses]
       .sort((a, b) => b.date.localeCompare(a.date))
       .slice(0, 5);
@@ -74,10 +73,9 @@ export default async function DashboardPage({
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               {room.members.map((m) => {
-                const mp = Math.min(
-                  100,
-                  Math.round((m.personalSaved / m.personalGoal) * 100)
-                );
+                const mp = room.useSaving && m.personalGoal > 0
+                  ? Math.min(100, Math.round((m.personalSaved / m.personalGoal) * 100))
+                  : 0;
                 return (
                   <Card key={m.id} className="p-4">
                     <div className="flex items-center gap-3">
