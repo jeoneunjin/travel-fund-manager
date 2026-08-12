@@ -1,0 +1,6 @@
+interface:
+  display_name: "Commit Changes"
+  short_description: "검사 후 변경을 원자적 커밋으로 기록합니다"
+  default_prompt: "Use $commit to validate and commit the current changes without pushing."
+policy:
+  allow_implicit_invocation: false
