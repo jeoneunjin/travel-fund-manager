@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ArrowLeft, Compass } from "lucide-react";
@@ -9,7 +10,11 @@ import { Button } from "@/components/ui/button";
 export function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
-  const canGoBack = typeof window !== "undefined" && window.history.length > 1;
+  const [canGoBack, setCanGoBack] = useState(false);
+
+  useEffect(() => {
+    setCanGoBack(window.history.length > 1);
+  }, []);
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
