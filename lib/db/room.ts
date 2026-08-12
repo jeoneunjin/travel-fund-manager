@@ -1,7 +1,21 @@
 // lib/db/room.ts
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@/lib/generated/prisma/client";
+import { randomBytes } from "crypto";
 import type { Room, Member, Expense, SettlementRow, Transfer } from "@/lib/types";
+
+const INVITE_TOKEN_RETRY_COUNT = 3;
+
+export type CreateRoomInput = {
+  title: string;
+  destination: string;
+  startDate: Date;
+  endDate: Date;
+  useSaving: boolean;
+  goalAmount?: number;
+  expectedPeople: number;
+  ownerId: string;
+};
 
 // 쿼리에 실제로 쓰는 include 절 — 이 상수를 타입 계산에도 그대로 재사용함
 const roomInclude = {
@@ -20,6 +34,7 @@ function toRoom(dbRoom: DbRoom): Room {
     destination: dbRoom.destination,
     startDate: dbRoom.startDate.toISOString(),
     endDate: dbRoom.endDate.toISOString(),
+    useSaving: dbRoom.useSaving,
     goalAmount: dbRoom.goalAmount,
     totalSaved: dbRoom.members.reduce((sum, m) => sum + m.personalSaved, 0),
     expectedPeople: dbRoom.expectedPeople,
@@ -68,6 +83,53 @@ export async function getRoom(roomId: string): Promise<Room | undefined> {
 export async function getRoomByToken(token: string): Promise<Room | undefined> {
   const room = await fetchRoomRaw({ inviteToken: token });
   return room ? toRoom(room) : undefined;
+}
+
+function createInviteToken(): string {
+  return randomBytes(12).toString("base64url");
+}
+
+export async function createRoom(input: CreateRoomInput) {
+  const goalAmount = input.useSaving ? input.goalAmount! : 0;
+  // expectedPeople은 예상치라 실제 인원과 다를 수 있음 — 초대 참여 API에서 재계산 필요
+  const personalGoal = input.useSaving ? Math.round(goalAmount / input.expectedPeople) : 0;
+
+  for (let attempt = 0; attempt < INVITE_TOKEN_RETRY_COUNT; attempt += 1) {
+    try {
+      return await prisma.room.create({
+        data: {
+          title: input.title,
+          destination: input.destination,
+          startDate: input.startDate,
+          endDate: input.endDate,
+          useSaving: input.useSaving,
+          goalAmount,
+          expectedPeople: input.expectedPeople,
+          inviteToken: createInviteToken(),
+          members: {
+            create: {
+              userId: input.ownerId,
+              isOwner: true,
+              personalGoal,
+              personalSaved: 0,
+            },
+          },
+        },
+        select: { id: true, inviteToken: true },
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === "P2002" &&
+        attempt < INVITE_TOKEN_RETRY_COUNT - 1
+      ) {
+        continue;
+      }
+      throw error;
+    }
+  }
+
+  throw new Error("초대 토큰 생성에 실패했습니다.");
 }
 
 export function totalExpenses(room: Room): number {

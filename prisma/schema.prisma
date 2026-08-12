@@ -28,6 +28,7 @@ model Room {
   destination    String
   startDate      DateTime
   endDate        DateTime
+  useSaving      Boolean      @default(true)
   goalAmount     Int
   expectedPeople Int
   status         RoomStatus   @default(SAVING)

@@ -1,14 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { type FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarDays, Plane, Wallet, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
 import { PageShell } from "@/components/site-header";
-import { formatWon } from "@/lib/format";
+import { RoomDetailsFields } from "./RoomDetailsFields";
+import { RoomPreview } from "./RoomPreview";
 
 export default function NewRoomPage() {
   const router = useRouter();
@@ -16,17 +13,56 @@ export default function NewRoomPage() {
   const [destination, setDestination] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [useSaving, setUseSaving] = useState(true);
   const [goalAmount, setGoalAmount] = useState("");
   const [people, setPeople] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const monthlyPreview = useMemo(() => {
-    const goal = Number(goalAmount) || 0;
-    const p = Number(people) || 0;
-    if (goal <= 0 || p <= 0) return 0;
-    // assume 6 months saving window
-    const months = 6;
-    return Math.round(goal / p / months);
-  }, [goalAmount, people]);
+    const goal = useSaving ? Number(goalAmount) || 0 : 0;
+    const expectedPeople = Number(people) || 0;
+    if (goal <= 0 || expectedPeople <= 0) return 0;
+    return Math.round(goal / expectedPeople / 6);
+  }, [goalAmount, people, useSaving]);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setErrorMessage("");
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/rooms", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          destination,
+          startDate,
+          endDate,
+          useSaving,
+          ...(useSaving ? { goalAmount: Number(goalAmount) } : {}),
+          expectedPeople: Number(people),
+        }),
+      });
+      const data = (await response.json().catch(() => null)) as {
+        error?: string;
+        room?: { id: string };
+      } | null;
+
+      if (!response.ok || !data?.room) {
+        setErrorMessage(data?.error ?? "방 생성 중 문제가 발생했습니다. 다시 시도해 주세요.");
+        return;
+      }
+
+      router.push(`/rooms/${data.room.id}`);
+      router.refresh();
+    } catch {
+      setErrorMessage("방 생성 중 문제가 발생했습니다. 다시 시도해 주세요.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <PageShell className="max-w-2xl">
@@ -37,182 +73,50 @@ export default function NewRoomPage() {
         </p>
       </div>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          router.push("/rooms/okinawa-2026");
-        }}
-        className="grid gap-6 md:grid-cols-3"
-      >
+      <form onSubmit={handleSubmit} className="grid gap-6 md:grid-cols-3">
         <div className="space-y-5 md:col-span-2">
-          <Card className="space-y-5 p-6">
-            <div className="space-y-2">
-              <Label htmlFor="title">
-                여행 제목 <span className="text-destructive">*</span>
-              </Label>
-              <div className="relative">
-                <Plane className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="title"
-                  placeholder="예: 오키나와 4박 5일"
-                  className="pl-9"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
+          <RoomDetailsFields
+            title={title}
+            destination={destination}
+            startDate={startDate}
+            endDate={endDate}
+            useSaving={useSaving}
+            goalAmount={goalAmount}
+            people={people}
+            isSubmitting={isSubmitting}
+            onTitleChange={setTitle}
+            onDestinationChange={setDestination}
+            onStartDateChange={setStartDate}
+            onEndDateChange={setEndDate}
+            onUseSavingChange={setUseSaving}
+            onGoalAmountChange={setGoalAmount}
+            onPeopleChange={setPeople}
+          />
 
-            <div className="space-y-2">
-              <Label htmlFor="destination">여행지</Label>
-              <Input
-                id="destination"
-                placeholder="예: 오키나와"
-                value={destination}
-                onChange={(e) => setDestination(e.target.value)}
-              />
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="start">
-                  시작일 <span className="text-destructive">*</span>
-                </Label>
-                <div className="relative">
-                  <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="start"
-                    type="date"
-                    className="pl-9"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="end">
-                  종료일 <span className="text-destructive">*</span>
-                </Label>
-                <div className="relative">
-                  <CalendarDays className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="end"
-                    type="date"
-                    className="pl-9"
-                    value={endDate}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="goal">
-                  목표 금액 <span className="text-destructive">*</span>
-                </Label>
-                <div className="relative">
-                  <Wallet className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="goal"
-                    type="number"
-                    min={0}
-                    step={10000}
-                    placeholder="3000000"
-                    className="pl-9 pr-12"
-                    value={goalAmount}
-                    onChange={(e) => setGoalAmount(e.target.value)}
-                    required
-                  />
-                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                    원
-                  </span>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="people">
-                  예상 인원 <span className="text-destructive">*</span>
-                </Label>
-                <div className="relative">
-                  <Users className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="people"
-                    type="number"
-                    min={1}
-                    placeholder="4"
-                    className="pl-9 pr-12"
-                    value={people}
-                    onChange={(e) => setPeople(e.target.value)}
-                    required
-                  />
-                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
-                    명
-                  </span>
-                </div>
-              </div>
-            </div>
-          </Card>
+          {errorMessage && (
+            <p className="text-sm text-destructive" role="alert" aria-live="polite">
+              {errorMessage}
+            </p>
+          )}
 
           <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.back()}
-            >
+            <Button type="button" variant="outline" onClick={() => router.back()} disabled={isSubmitting}>
               취소
             </Button>
-            <Button type="submit">방 만들기</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? "방 만드는 중..." : "방 만들기"}
+            </Button>
           </div>
         </div>
 
-        {/* Live preview */}
-        <div className="md:col-span-1">
-          <Card className="sticky top-20 overflow-hidden p-5">
-            <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              실시간 미리보기
-            </div>
-            <h3 className="mt-1 text-lg font-bold">
-              {title || "여행 제목"}
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {destination || "여행지"}
-            </p>
-
-            <div className="mt-5 rounded-lg bg-gradient-to-br from-sky-50 to-blue-50 p-4">
-              <div className="text-xs text-muted-foreground">
-                1인당 월 적립 예상액
-              </div>
-              <div className="mt-1 text-2xl font-bold text-primary">
-                {formatWon(monthlyPreview)}
-              </div>
-              <div className="mt-2 space-y-1 text-xs text-muted-foreground">
-                <div className="flex justify-between">
-                  <span>목표 금액</span>
-                  <span className="font-medium text-foreground">
-                    {goalAmount ? formatWon(Number(goalAmount)) : "—"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>예상 인원</span>
-                  <span className="font-medium text-foreground">
-                    {people || "—"}명
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>적립 기간</span>
-                  <span className="font-medium text-foreground">6개월</span>
-                </div>
-              </div>
-            </div>
-
-            <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-              생성 후 초대 링크로 멤버를 초대하면, 각자의 적립 목표가 자동으로
-              분배됩니다.
-            </p>
-          </Card>
-        </div>
+        <RoomPreview
+          title={title}
+          destination={destination}
+          goalAmount={goalAmount}
+          people={people}
+          useSaving={useSaving}
+          monthlyPreview={monthlyPreview}
+        />
       </form>
     </PageShell>
   );

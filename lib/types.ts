@@ -35,6 +35,7 @@ export interface Room {
   destination: string;
   startDate: string; // ISO
   endDate: string; // ISO
+  useSaving: boolean;
   goalAmount: number;
   totalSaved: number;
   expectedPeople: number;
