@@ -100,7 +100,7 @@ function GoalAmountField({ value, onChange }: { value: string; onChange: (value:
       <Label htmlFor="goal">목표 금액 <span className="text-destructive">*</span></Label>
       <div className="relative">
         <Wallet className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input id="goal" type="number" min={1} step={10000} placeholder="3000000" className="pl-9 pr-12" value={value} onChange={(event) => onChange(event.target.value)} required />
+        <Input id="goal" type="number" min={10000} step={10000} placeholder="3000000" className="pl-9 pr-12" value={value} onChange={(event) => onChange(event.target.value)} required />
         <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">원</span>
       </div>
     </div>
