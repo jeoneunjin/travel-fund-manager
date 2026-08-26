@@ -74,5 +74,8 @@ schema.prisma를 수정했다면, 작업 요약 맨 앞(또는 완전히 별도 
 ## Current Status
 
 - 완료: 인증(로그인/로그아웃/세션 UI), 방 생성 API, 초대 참여 백엔드,
-  mock-data.ts 의존 제거, 정산 순수 함수 lib/settlement.ts 분리
+  mock-data.ts 의존 제거, 정산 순수 함수 lib/settlement.ts 분리,
+  Next 13.5.1 → 16 업그레이드 (next-auth peer 요구사항 불일치로 Server
+  Component에서 세션이 안 읽히던 버그의 근본 원인이었음). eslint 설정도
+  eslint.config.mjs 플랫 컨피그로 전환, lint 스크립트는 `eslint .`
 - 다음 작업: 미정
