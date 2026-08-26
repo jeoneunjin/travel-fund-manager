@@ -81,8 +81,13 @@ function fetchRoomRaw(where: Prisma.RoomWhereUniqueInput) {
   return prisma.room.findUnique({ where, include: roomInclude });
 }
 
-export async function getRooms(): Promise<Room[]> {
-  const rooms = await prisma.room.findMany({ include: roomInclude, orderBy: { startDate: "asc" } });
+// 로그인한 유저가 멤버로 속한 방만 반환 — 전체 방 목록을 노출하지 않기 위해 userId 필터 필수
+export async function getRooms(userId: string): Promise<Room[]> {
+  const rooms = await prisma.room.findMany({
+    where: { members: { some: { userId } } },
+    include: roomInclude,
+    orderBy: { startDate: "asc" },
+  });
   return rooms.map(toRoom);
 }
 

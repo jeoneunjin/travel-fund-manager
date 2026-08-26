@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Plus, MapPin, Users, CalendarDays } from "lucide-react";
 import { statusMeta } from "@/lib/constants";
 import { getRooms } from "@/lib/db/room";
+import { auth } from "@/lib/auth";
 import { dDayLabel, dateRangeLabel, formatWon, formatWonShort } from "@/lib/format";
 import { PageShell } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
@@ -12,7 +14,10 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
 export default async function RoomsPage() {
-  const rooms = await getRooms();
+  const session = await auth();
+  if (!session?.user) redirect("/login");
+
+  const rooms = await getRooms(session.user.id);
   return (
     <PageShell>
       <div className="flex items-center justify-between">
