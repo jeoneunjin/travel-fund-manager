@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Receipt, Wallet, Users, CalendarDays } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -35,6 +35,8 @@ export function NewExpenseForm({ room }: { room: Room }) {
     new Date().toISOString().slice(0, 10)
   );
   const [category, setCategory] = useState<ExpenseCategory>("food");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const numericAmount = Number(amount) || 0;
   const perPerson =
@@ -49,6 +51,38 @@ export function NewExpenseForm({ room }: { room: Room }) {
     });
   };
 
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setErrorMessage("");
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`/api/rooms/${room.id}/expenses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          amount: numericAmount,
+          payerId,
+          splitBetweenIds: Array.from(selected),
+          category,
+          date,
+        }),
+      });
+      const data = (await response.json().catch(() => null)) as { error?: string } | null;
+
+      if (!response.ok) {
+        setErrorMessage(data?.error ?? "지출 등록 중 문제가 발생했습니다.");
+        return;
+      }
+
+      router.push(`/rooms/${room.id}/expenses`);
+    } catch {
+      setErrorMessage("지출 등록 중 문제가 발생했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-6">
@@ -58,13 +92,7 @@ export function NewExpenseForm({ room }: { room: Room }) {
         </p>
       </div>
 
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          router.push(`/rooms/${room.id}/expenses`);
-        }}
-        className="space-y-5"
-      >
+      <form onSubmit={handleSubmit} className="space-y-5">
         <Card className="space-y-5 p-6">
           <div className="space-y-2">
             <Label htmlFor="title">
@@ -248,6 +276,12 @@ export function NewExpenseForm({ room }: { room: Room }) {
           </div>
         </Card>
 
+        {errorMessage && (
+          <p className="text-sm text-destructive" role="alert" aria-live="polite">
+            {errorMessage}
+          </p>
+        )}
+
         <div className="flex justify-end gap-2">
           <Button
             type="button"
@@ -256,8 +290,8 @@ export function NewExpenseForm({ room }: { room: Room }) {
           >
             취소
           </Button>
-          <Button type="submit" disabled={selected.size === 0}>
-            등록하기
+          <Button type="submit" disabled={selected.size === 0 || isSubmitting}>
+            {isSubmitting ? "등록하는 중..." : "등록하기"}
           </Button>
         </div>
       </form>

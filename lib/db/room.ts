@@ -1,6 +1,6 @@
 // lib/db/room.ts
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@/lib/generated/prisma/client";
+import { Prisma, $Enums } from "@/lib/generated/prisma/client";
 import { randomBytes } from "crypto";
 import type { Room, Member, Expense, SettlementRow, Transfer } from "@/lib/types";
 
@@ -33,6 +33,21 @@ const roomInclude = {
 // 위 include 절 그대로 반영된 타입 — schema.prisma가 바뀌면 이 타입도 자동으로 같이 바뀜
 type DbRoom = Prisma.RoomGetPayload<{ include: typeof roomInclude }>;
 
+// expense + shares raw 데이터를 화면이 기대하는 Expense 타입 모양으로 변환
+// toRoom()과 createExpense() 양쪽에서 재사용
+function toExpense(e: DbRoom["expenses"][number]): Expense {
+  return {
+    id: e.id,
+    title: e.title,
+    amount: e.amount,
+    payerId: e.payerId,
+    splitBetweenIds: e.shares.map((s) => s.memberId),
+    date: e.date.toISOString(),
+    category: e.category.toLowerCase() as Expense["category"],
+    place: e.place ?? undefined,
+  };
+}
+
 // Prisma에서 가져온 raw 데이터를 화면이 기대하는 Room 타입 모양으로 변환
 function toRoom(dbRoom: DbRoom): Room {
   return {
@@ -58,18 +73,7 @@ function toRoom(dbRoom: DbRoom): Room {
         personalSaved: m.personalSaved,
       })
     ),
-    expenses: dbRoom.expenses.map(
-      (e): Expense => ({
-        id: e.id,
-        title: e.title,
-        amount: e.amount,
-        payerId: e.payerId,
-        splitBetweenIds: e.shares.map((s) => s.memberId),
-        date: e.date.toISOString(),
-        category: e.category.toLowerCase() as Expense["category"],
-        place: e.place ?? undefined,
-      })
-    ),
+    expenses: dbRoom.expenses.map(toExpense),
   };
 }
 
@@ -238,6 +242,35 @@ export async function joinRoomByInviteToken(token: string, userId: string) {
   }
 
   throw new Error("방 참여 처리에 실패했습니다.");
+}
+
+export type CreateExpenseInput = {
+  roomId: string;
+  title: string;
+  amount: number;
+  payerId: string;
+  splitBetweenIds: string[];
+  category: Expense["category"];
+  date: Date;
+  place?: string;
+};
+
+export async function createExpense(input: CreateExpenseInput): Promise<Expense> {
+  const expense = await prisma.expense.create({
+    data: {
+      roomId: input.roomId,
+      title: input.title,
+      amount: input.amount,
+      payerId: input.payerId,
+      place: input.place,
+      date: input.date,
+      category: input.category.toUpperCase() as $Enums.ExpenseCategory,
+      shares: { create: input.splitBetweenIds.map((memberId) => ({ memberId })) },
+    },
+    include: { shares: true },
+  });
+
+  return toExpense(expense);
 }
 
 export function totalExpenses(room: Room): number {
