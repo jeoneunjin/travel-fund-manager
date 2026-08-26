@@ -4,7 +4,7 @@ import { Plus, MapPin, Users, CalendarDays } from "lucide-react";
 import { statusMeta } from "@/lib/constants";
 import { getRooms } from "@/lib/db/room";
 import { auth } from "@/lib/auth";
-import { dDayLabel, dateRangeLabel, formatWon, formatWonShort } from "@/lib/format";
+import { dDayLabel, dateRangeLabel, formatWonShort } from "@/lib/format";
 import { PageShell } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";

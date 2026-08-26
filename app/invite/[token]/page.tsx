@@ -3,11 +3,12 @@ import { getRoomByToken } from "@/lib/db/room";
 import { PageShell } from "@/components/site-header";
 import { InviteView } from "./invite-view";
 
-export default async function InvitePage({
-  params,
-}: {
-  params: { token: string };
-}) {
+export default async function InvitePage(
+  props: {
+    params: Promise<{ token: string }>;
+  }
+) {
+  const params = await props.params;
   const { token } = params;
   const [session, room] = await Promise.all([auth(), getRoomByToken(token)]);
 

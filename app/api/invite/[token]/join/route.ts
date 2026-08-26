@@ -10,10 +10,8 @@ const inviteTokenSchema = z
   .max(64)
   .regex(/^[A-Za-z0-9_-]+$/);
 
-export async function POST(
-  _request: NextRequest,
-  { params }: { params: { token: string } },
-) {
+export async function POST(_request: NextRequest, props: { params: Promise<{ token: string }> }) {
+  const params = await props.params;
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });

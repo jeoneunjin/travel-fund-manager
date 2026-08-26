@@ -15,6 +15,8 @@ export function SiteHeader() {
   const [canGoBack, setCanGoBack] = useState(false);
 
   useEffect(() => {
+    // window.history는 마운트 후 클라이언트에서만 읽을 수 있음
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCanGoBack(window.history.length > 1);
   }, []);
 
