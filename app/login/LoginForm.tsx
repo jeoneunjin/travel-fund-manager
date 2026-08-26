@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 
 type Mode = "login" | "signup";
 
-export function LoginForm() {
+export function LoginForm({ callbackUrl }: { callbackUrl?: string }) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("login");
   const [showPassword, setShowPassword] = useState(false);
@@ -42,7 +42,7 @@ export function LoginForm() {
           return;
         }
 
-        router.push("/rooms");
+        router.push(callbackUrl ?? "/rooms");
         router.refresh();
         return;
       }
