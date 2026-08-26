@@ -68,3 +68,10 @@ schema.prisma를 수정했다면, 작업 요약 맨 앞(또는 완전히 별도 
 반드시 이렇게 표시할 것:
 
 ⚠️ 마이그레이션 필요: npx prisma migrate dev --name <name>
+
+## Current Status
+
+- 완료: 인증, 방 생성 API, 초대 참여 백엔드
+- 진행 중: mock-data.ts 의존 제거 (순서: settlement-view.tsx import 교체 →
+  초대 페이지 실데이터화 → 지출 생성 API → mock-data.ts 정리)
+- 다음 작업: settlement-view.tsx의 import 경로 교체
