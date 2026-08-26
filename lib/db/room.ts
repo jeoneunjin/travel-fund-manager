@@ -2,7 +2,7 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma, $Enums } from "@/lib/generated/prisma/client";
 import { randomBytes } from "crypto";
-import type { Room, Member, Expense, SettlementRow, Transfer } from "@/lib/types";
+import type { Room, Member, Expense } from "@/lib/types";
 
 const INVITE_TOKEN_RETRY_COUNT = 3;
 const JOIN_ROOM_RETRY_COUNT = 3;
@@ -278,58 +278,5 @@ export async function createExpense(input: CreateExpenseInput): Promise<Expense>
   return toExpense(expense);
 }
 
-export function totalExpenses(room: Room): number {
-  return room.expenses.reduce((sum, e) => sum + e.amount, 0);
-}
-
-// 정산 계산 로직은 mock-data.ts에 있던 걸 그대로 재사용 (순수 함수라 손댈 필요 없음)
-export function computeSettlement(room: Room): {
-  rows: SettlementRow[];
-  transfers: Transfer[];
-} {
-  const paidByMember = new Map<string, number>();
-  const burdenByMember = new Map<string, number>();
-  room.members.forEach((m) => {
-    paidByMember.set(m.id, 0);
-    burdenByMember.set(m.id, 0);
-  });
-  room.expenses.forEach((e) => {
-    paidByMember.set(e.payerId, (paidByMember.get(e.payerId) ?? 0) + e.amount);
-    const share = e.amount / e.splitBetweenIds.length;
-    e.splitBetweenIds.forEach((id) => {
-      burdenByMember.set(id, (burdenByMember.get(id) ?? 0) + share);
-    });
-  });
-
-  const rows: SettlementRow[] = room.members.map((m) => {
-    const paid = paidByMember.get(m.id) ?? 0;
-    const burden = Math.round(burdenByMember.get(m.id) ?? 0);
-    return { memberId: m.id, paid, burden, diff: Math.round(paid - burden) };
-  });
-
-  const debtors = rows.filter((r) => r.diff < 0).sort((a, b) => a.diff - b.diff);
-  const creditors = rows.filter((r) => r.diff > 0).sort((a, b) => b.diff - a.diff);
-
-  const transfers: Transfer[] = [];
-  let i = 0;
-  let j = 0;
-  const remaining = rows.map((r) => ({ ...r }));
-  while (i < debtors.length && j < creditors.length) {
-    const d = remaining.find((r) => r.memberId === debtors[i].memberId)!;
-    const c = remaining.find((r) => r.memberId === creditors[j].memberId)!;
-    const amount = Math.min(-d.diff, c.diff);
-    if (amount > 0) {
-      transfers.push({ fromId: d.memberId, toId: c.memberId, amount });
-      d.diff += amount;
-      c.diff -= amount;
-    }
-    if (Math.abs(d.diff) < 1) i++;
-    if (Math.abs(c.diff) < 1) j++;
-  }
-
-  return { rows, transfers };
-}
-
-export function getMember(room: Room, memberId: string) {
-  return room.members.find((m) => m.id === memberId);
-}
+// totalExpenses/computeSettlement/getMember는 client component도 import하는 순수 함수라
+// prisma를 불러오는 이 파일에서 빠져나가 lib/settlement.ts로 이동함
