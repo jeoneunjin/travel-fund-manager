@@ -45,7 +45,9 @@
   prop으로 넘긴다 — `withRoom` 콜백 안에서 훅을 직접 호출하면 lint 에러가 남
 - 컴포넌트 200줄 이하 유지, 함수는 작게 분리
 - Prisma 응답 타입은 손으로 인터페이스 작성하지 말고 `Prisma.XxxGetPayload` 유틸리티 타입 사용
-- 정산/계산 관련 순수 함수(`lib/db/*.ts`)는 UI 로직과 분리 유지
+- 정산/계산 관련 순수 함수는 `lib/settlement.ts`에 두고 UI 로직과 분리 유지 —
+  prisma를 불러오는 `lib/db/*.ts`에서 client component가 직접 import하면 안 됨
+- 인증 관련 기능 추가 시 로그인뿐 아니라 로그아웃/세션 반영까지 세트로 체크
 
 ## Naming
 
@@ -71,7 +73,6 @@ schema.prisma를 수정했다면, 작업 요약 맨 앞(또는 완전히 별도 
 
 ## Current Status
 
-- 완료: 인증, 방 생성 API, 초대 참여 백엔드
-- 진행 중: mock-data.ts 의존 제거 (순서: settlement-view.tsx import 교체 →
-  초대 페이지 실데이터화 → 지출 생성 API → mock-data.ts 정리)
-- 다음 작업: settlement-view.tsx의 import 경로 교체
+- 완료: 인증(로그인/로그아웃/세션 UI), 방 생성 API, 초대 참여 백엔드,
+  mock-data.ts 의존 제거, 정산 순수 함수 lib/settlement.ts 분리
+- 다음 작업: 미정
