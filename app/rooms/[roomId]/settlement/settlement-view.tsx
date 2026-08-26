@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { computeSettlement, getMember, totalExpenses } from "@/lib/db/room";
+import { computeSettlement, getMember, totalExpenses } from "@/lib/settlement";
 import { formatWon } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Room } from "@/lib/types";

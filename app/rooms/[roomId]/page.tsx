@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { categoryColor, categoryLabel } from "@/lib/constants";
-import { getMember } from "@/lib/db/room";
+import { getMember } from "@/lib/settlement";
 import { formatDateShort, formatWon, formatWonShort } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
