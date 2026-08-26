@@ -6,11 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  categoryColor,
-  categoryLabel,
-  getMember,
-} from "@/lib/mock-data";
+import { categoryColor, categoryLabel } from "@/lib/mock-data";
+import { getMember } from "@/lib/db/room";
 import { formatDateShort, formatWon, formatWonShort } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
