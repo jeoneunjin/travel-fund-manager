@@ -16,10 +16,8 @@ const createExpenseSchema = z.object({
   place: z.string().trim().min(1).max(100).optional(),
 });
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: { roomId: string } },
-) {
+export async function POST(req: NextRequest, props: { params: Promise<{ roomId: string }> }) {
+  const params = await props.params;
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });

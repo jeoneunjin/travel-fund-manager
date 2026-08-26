@@ -111,6 +111,8 @@ const Carousel = React.forwardRef<
         return;
       }
 
+      // embla 초기 상태를 동기화하기 위한 최초 1회 호출
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       onSelect(api);
       api.on('reInit', onSelect);
       api.on('select', onSelect);

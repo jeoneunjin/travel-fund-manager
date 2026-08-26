@@ -11,11 +11,12 @@ function safeCallbackUrl(value: string | undefined): string | undefined {
   return value.startsWith("/") && !value.startsWith("//") ? value : undefined;
 }
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: { callbackUrl?: string };
-}) {
+export default async function LoginPage(
+  props: {
+    searchParams: Promise<{ callbackUrl?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const callbackUrl = safeCallbackUrl(searchParams.callbackUrl);
 
   const session = await auth();

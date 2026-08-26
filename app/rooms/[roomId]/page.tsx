@@ -11,11 +11,12 @@ import { getMember } from "@/lib/settlement";
 import { formatDateShort, formatWon, formatWonShort } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-export default async function DashboardPage({
-  params,
-}: {
-  params: { roomId: string };
-}) {
+export default async function DashboardPage(
+  props: {
+    params: Promise<{ roomId: string }>;
+  }
+) {
+  const params = await props.params;
   return withRoom(params.roomId, (room) => {
     const pct = room.useSaving && room.goalAmount > 0
       ? Math.min(100, Math.round((room.totalSaved / room.goalAmount) * 100))
