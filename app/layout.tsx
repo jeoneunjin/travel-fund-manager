@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { SiteHeader } from '@/components/site-header';
+import { Providers } from './providers';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -18,10 +19,12 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={inter.className}>
-        <div className="min-h-screen bg-[hsl(210,40%,97%)]">
-          <SiteHeader />
-          <main>{children}</main>
-        </div>
+        <Providers>
+          <div className="min-h-screen bg-[hsl(210,40%,97%)]">
+            <SiteHeader />
+            <main>{children}</main>
+          </div>
+        </Providers>
       </body>
     </html>
   );

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import {
   Copy,
   Check,
@@ -37,6 +38,7 @@ export function InviteView({
   const [copied, setCopied] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   const inviteUrl =
     typeof window !== "undefined" ? `${window.location.origin}/invite/${token}` : "";
@@ -56,12 +58,19 @@ export function InviteView({
 
   const handleJoin = async () => {
     setErrorMessage("");
+    setSessionExpired(false);
     setIsJoining(true);
     try {
       const response = await fetch(`/api/invite/${token}/join`, { method: "POST" });
       const data = (await response.json().catch(() => null)) as
         | { room?: { id: string }; error?: string }
         | null;
+
+      if (response.status === 401) {
+        setErrorMessage("세션이 만료됐어요. 다시 로그인해 주세요.");
+        setSessionExpired(true);
+        return;
+      }
 
       if (!response.ok || !data?.room) {
         setErrorMessage(data?.error ?? "방 참여 중 문제가 발생했습니다.");
@@ -265,6 +274,17 @@ export function InviteView({
       {errorMessage && (
         <p className="mt-4 text-center text-sm text-destructive" role="alert" aria-live="polite">
           {errorMessage}
+          {sessionExpired && (
+            <>
+              {" "}
+              <Link
+                href={`/login?callbackUrl=${encodeURIComponent(`/invite/${token}`)}`}
+                className="underline"
+              >
+                로그인하러 가기
+              </Link>
+            </>
+          )}
         </p>
       )}
 

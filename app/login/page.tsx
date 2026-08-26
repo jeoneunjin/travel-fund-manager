@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+import { auth } from "@/lib/auth";
 import { LoginBrand } from "./LoginBrand";
 import { LoginForm } from "./LoginForm";
 import { LoginSocialButtons } from "./LoginSocialButtons";
@@ -9,12 +11,15 @@ function safeCallbackUrl(value: string | undefined): string | undefined {
   return value.startsWith("/") && !value.startsWith("//") ? value : undefined;
 }
 
-export default function LoginPage({
+export default async function LoginPage({
   searchParams,
 }: {
   searchParams: { callbackUrl?: string };
 }) {
   const callbackUrl = safeCallbackUrl(searchParams.callbackUrl);
+
+  const session = await auth();
+  if (session?.user) redirect(callbackUrl ?? "/rooms");
 
   return (
     <PageShell className="flex min-h-[calc(100vh-3.5rem)] max-w-md items-center justify-center py-10">

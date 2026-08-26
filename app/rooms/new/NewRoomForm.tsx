@@ -2,6 +2,7 @@
 
 import { type FormEvent, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { PageShell } from "@/components/site-header";
 import { RoomDetailsFields } from "./RoomDetailsFields";
@@ -17,6 +18,7 @@ export function NewRoomForm() {
   const [goalAmount, setGoalAmount] = useState("");
   const [people, setPeople] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const monthlyPreview = useMemo(() => {
@@ -29,6 +31,7 @@ export function NewRoomForm() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrorMessage("");
+    setSessionExpired(false);
     setIsSubmitting(true);
 
     try {
@@ -49,6 +52,12 @@ export function NewRoomForm() {
         error?: string;
         room?: { id: string };
       } | null;
+
+      if (response.status === 401) {
+        setErrorMessage("세션이 만료됐어요. 다시 로그인해 주세요.");
+        setSessionExpired(true);
+        return;
+      }
 
       if (!response.ok || !data?.room) {
         setErrorMessage(data?.error ?? "방 생성 중 문제가 발생했습니다. 다시 시도해 주세요.");
@@ -96,6 +105,17 @@ export function NewRoomForm() {
           {errorMessage && (
             <p className="text-sm text-destructive" role="alert" aria-live="polite">
               {errorMessage}
+              {sessionExpired && (
+                <>
+                  {" "}
+                  <Link
+                    href={`/login?callbackUrl=${encodeURIComponent("/rooms/new")}`}
+                    className="underline"
+                  >
+                    로그인하러 가기
+                  </Link>
+                </>
+              )}
             </p>
           )}
 

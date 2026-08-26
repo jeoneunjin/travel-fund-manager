@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { signOut, useSession } from "next-auth/react";
 import { ArrowLeft, Compass } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,7 @@ import { Button } from "@/components/ui/button";
 export function SiteHeader() {
   const pathname = usePathname();
   const router = useRouter();
+  const { data: session } = useSession();
   const [canGoBack, setCanGoBack] = useState(false);
 
   useEffect(() => {
@@ -46,9 +48,24 @@ export function SiteHeader() {
           >
             <Link href="/rooms">내 방</Link>
           </Button>
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/login">로그인</Link>
-          </Button>
+          {session?.user ? (
+            <>
+              <span className="hidden text-sm text-muted-foreground sm:inline">
+                {session.user.name ?? session.user.email}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => signOut({ callbackUrl: "/" })}
+              >
+                로그아웃
+              </Button>
+            </>
+          ) : (
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/login">로그인</Link>
+            </Button>
+          )}
         </div>
       </div>
     </header>

@@ -2,6 +2,7 @@
 
 import { type FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Check, Receipt, Wallet, Users, CalendarDays } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,7 @@ export function NewExpenseForm({ room }: { room: Room }) {
   );
   const [category, setCategory] = useState<ExpenseCategory>("food");
   const [errorMessage, setErrorMessage] = useState("");
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const numericAmount = Number(amount) || 0;
@@ -51,6 +53,7 @@ export function NewExpenseForm({ room }: { room: Room }) {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorMessage("");
+    setSessionExpired(false);
     setIsSubmitting(true);
     try {
       const response = await fetch(`/api/rooms/${room.id}/expenses`, {
@@ -66,6 +69,12 @@ export function NewExpenseForm({ room }: { room: Room }) {
         }),
       });
       const data = (await response.json().catch(() => null)) as { error?: string } | null;
+
+      if (response.status === 401) {
+        setErrorMessage("세션이 만료됐어요. 다시 로그인해 주세요.");
+        setSessionExpired(true);
+        return;
+      }
 
       if (!response.ok) {
         setErrorMessage(data?.error ?? "지출 등록 중 문제가 발생했습니다.");
@@ -276,6 +285,17 @@ export function NewExpenseForm({ room }: { room: Room }) {
         {errorMessage && (
           <p className="text-sm text-destructive" role="alert" aria-live="polite">
             {errorMessage}
+            {sessionExpired && (
+              <>
+                {" "}
+                <Link
+                  href={`/login?callbackUrl=${encodeURIComponent(`/rooms/${room.id}/expenses/new`)}`}
+                  className="underline"
+                >
+                  로그인하러 가기
+                </Link>
+              </>
+            )}
           </p>
         )}
 
