@@ -14,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { categoryColor, categoryLabel, expenseCategories } from "@/lib/mock-data";
+import { categoryColor, categoryLabel, expenseCategories } from "@/lib/constants";
 import { getMember } from "@/lib/db/room";
 import { formatDate, formatWon } from "@/lib/format";
 import { cn } from "@/lib/utils";

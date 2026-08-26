@@ -15,10 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  categoryLabel,
-  expenseCategories,
-} from "@/lib/mock-data";
+import { categoryLabel, expenseCategories } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { formatWon } from "@/lib/format";
 import type { ExpenseCategory, Room } from "@/lib/types";

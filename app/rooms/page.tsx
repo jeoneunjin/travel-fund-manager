@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Plus, MapPin, Users, CalendarDays } from "lucide-react";
-import { statusMeta } from "@/lib/mock-data";
+import { statusMeta } from "@/lib/constants";
 import { getRooms } from "@/lib/db/room";
 import { dDayLabel, dateRangeLabel, formatWon, formatWonShort } from "@/lib/format";
 import { PageShell } from "@/components/site-header";
