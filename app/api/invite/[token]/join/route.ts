@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
-import { joinRoomByInviteToken, RoomJoinNotAllowedError } from "@/lib/db/room";
+import { joinRoomByInviteToken, RoomInviteRequiredError, RoomJoinNotAllowedError } from "@/lib/db/room";
 
 const inviteTokenSchema = z
   .string()
@@ -13,7 +13,7 @@ const inviteTokenSchema = z
 export async function POST(_request: NextRequest, props: { params: Promise<{ token: string }> }) {
   const params = await props.params;
   const session = await auth();
-  if (!session?.user?.id) {
+  if (!session?.user?.id || !session.user.email) {
     return NextResponse.json({ error: "인증이 필요합니다." }, { status: 401 });
   }
 
@@ -23,7 +23,7 @@ export async function POST(_request: NextRequest, props: { params: Promise<{ tok
   }
 
   try {
-    const result = await joinRoomByInviteToken(parsed.data, session.user.id);
+    const result = await joinRoomByInviteToken(parsed.data, session.user.id, session.user.email);
     if (!result) {
       return NextResponse.json({ error: "유효하지 않은 초대 링크입니다." }, { status: 404 });
     }
@@ -33,6 +33,12 @@ export async function POST(_request: NextRequest, props: { params: Promise<{ tok
       { status: result.alreadyMember ? 200 : 201 },
     );
   } catch (error) {
+    if (error instanceof RoomInviteRequiredError) {
+      return NextResponse.json(
+        { error: "초대받은 이메일이 아니에요. 초대받은 이메일로 로그인/가입했는지 확인해 주세요." },
+        { status: 403 },
+      );
+    }
     if (error instanceof RoomJoinNotAllowedError) {
       return NextResponse.json({ error: error.message }, { status: 409 });
     }

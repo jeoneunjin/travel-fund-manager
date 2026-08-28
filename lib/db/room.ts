@@ -24,6 +24,18 @@ export class RoomJoinNotAllowedError extends Error {
   }
 }
 
+export class RoomInviteRequiredError extends Error {
+  constructor() {
+    super("초대받은 이메일이 아닙니다.");
+  }
+}
+
+// User.email에 대소문자 정규화가 없어서(가입 시점 원문 그대로 저장) 초대 이메일과
+// 비교할 때 양쪽 다 이 함수로 맞춰야 함
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
 // 쿼리에 실제로 쓰는 include 절 — 이 상수를 타입 계산에도 그대로 재사용함
 const roomInclude = {
   members: { include: { user: true } },
@@ -162,7 +174,9 @@ async function findExistingRoomMember(token: string, userId: string) {
   });
 }
 
-export async function joinRoomByInviteToken(token: string, userId: string) {
+export async function joinRoomByInviteToken(token: string, userId: string, email: string) {
+  const normalizedEmail = normalizeEmail(email);
+
   for (let attempt = 0; attempt < JOIN_ROOM_RETRY_COUNT; attempt += 1) {
     try {
       const result = await prisma.$transaction(
@@ -186,6 +200,12 @@ export async function joinRoomByInviteToken(token: string, userId: string) {
           if (room.members.length > 0) {
             return { room: { id: room.id, inviteToken: room.inviteToken }, alreadyMember: true };
           }
+
+          const invite = await tx.roomInvite.findUnique({
+            where: { roomId_email: { roomId: room.id, email: normalizedEmail } },
+          });
+          if (!invite || invite.status !== "PENDING") throw new RoomInviteRequiredError();
+
           if (room.status !== "SAVING") throw new RoomJoinNotAllowedError();
 
           await tx.roomMember.create({
@@ -196,6 +216,11 @@ export async function joinRoomByInviteToken(token: string, userId: string) {
               personalGoal: 0,
               personalSaved: 0,
             },
+          });
+
+          await tx.roomInvite.update({
+            where: { id: invite.id },
+            data: { status: "ACCEPTED", acceptedAt: new Date() },
           });
 
           if (room.useSaving) {
@@ -247,6 +272,50 @@ export async function joinRoomByInviteToken(token: string, userId: string) {
   }
 
   throw new Error("방 참여 처리에 실패했습니다.");
+}
+
+export class RoomInviteAlreadyMemberError extends Error {
+  constructor() {
+    super("이미 참여 중인 이메일입니다.");
+  }
+}
+
+export class RoomInviteAlreadyPendingError extends Error {
+  constructor() {
+    super("이미 초대한 이메일입니다.");
+  }
+}
+
+// 방장 전용 — 호출부(API route)에서 isOwner 확인 후 불러야 함
+export async function createRoomInvite(roomId: string, email: string) {
+  const normalizedEmail = normalizeEmail(email);
+
+  const existingMember = await prisma.roomMember.findFirst({
+    where: { roomId, user: { email: normalizedEmail } },
+    select: { id: true },
+  });
+  if (existingMember) throw new RoomInviteAlreadyMemberError();
+
+  try {
+    return await prisma.roomInvite.create({
+      data: { roomId, email: normalizedEmail },
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      throw new RoomInviteAlreadyPendingError();
+    }
+    throw error;
+  }
+}
+
+// 방장 전용 — 대기 중인 초대만 반환 (수락된 건은 room.members에 이미 나오므로 제외)
+export async function getPendingInvites(roomId: string) {
+  const invites = await prisma.roomInvite.findMany({
+    where: { roomId, status: "PENDING" },
+    orderBy: { invitedAt: "desc" },
+    select: { email: true, invitedAt: true },
+  });
+  return invites.map((i) => ({ email: i.email, invitedAt: i.invitedAt.toISOString() }));
 }
 
 export type CreateExpenseInput = {

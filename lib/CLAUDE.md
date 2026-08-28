@@ -78,4 +78,9 @@ schema.prisma를 수정했다면, 작업 요약 맨 앞(또는 완전히 별도 
   Next 13.5.1 → 16 업그레이드 (next-auth peer 요구사항 불일치로 Server
   Component에서 세션이 안 읽히던 버그의 근본 원인이었음). eslint 설정도
   eslint.config.mjs 플랫 컨피그로 전환, lint 스크립트는 `eslint .`
+- 완료: 이메일 지정 초대(RoomInvite 모델) — 방장이 이메일로 초대한 사람만
+  초대 링크로 참여 가능하도록 게이트. 발송은 자동화 안 하고 방장이 수동
+  공유(카톡 등). 이메일은 항상 소문자로 정규화해서 저장/비교
+  (`lib/db/room.ts`의 `normalizeEmail`) — `User.email`엔 정규화가 없으니
+  대소문자 다르게 가입해도 매칭되는지 항상 확인할 것
 - 다음 작업: 미정
