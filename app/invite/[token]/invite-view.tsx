@@ -21,18 +21,23 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import type { Room } from "@/lib/types";
+import { InviteManageCard } from "./invite-manage-card";
+import type { Room, RoomInvite } from "@/lib/types";
 
 export function InviteView({
   room,
   token,
   isLoggedIn,
   isMember,
+  isOwner,
+  invites,
 }: {
   room: Room;
   token: string;
   isLoggedIn: boolean;
   isMember: boolean;
+  isOwner: boolean;
+  invites: RoomInvite[];
 }) {
   const router = useRouter();
   const [copied, setCopied] = useState(false);
@@ -219,6 +224,9 @@ export function InviteView({
           </div>
         </div>
       </Card>
+
+      {/* Owner-only: invite by email */}
+      {isOwner && <InviteManageCard roomId={room.id} invites={invites} />}
 
       {/* Members */}
       <Card className="mt-4 p-5">

@@ -18,6 +18,7 @@ async function main() {
   await prisma.expenseShare.deleteMany();
   await prisma.expense.deleteMany();
   await prisma.roomMember.deleteMany();
+  await prisma.roomInvite.deleteMany();
   await prisma.room.deleteMany();
   await prisma.user.deleteMany();
 

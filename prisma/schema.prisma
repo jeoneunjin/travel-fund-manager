@@ -35,7 +35,20 @@ model Room {
   inviteToken    String       @unique
   members        RoomMember[]
   expenses       Expense[]
+  invites        RoomInvite[]
   createdAt      DateTime     @default(now())
+}
+
+model RoomInvite {
+  id         String       @id @default(cuid())
+  roomId     String
+  email      String
+  status     InviteStatus @default(PENDING)
+  invitedAt  DateTime     @default(now())
+  acceptedAt DateTime?
+  room       Room         @relation(fields: [roomId], references: [id])
+
+  @@unique([roomId, email])
 }
 
 model RoomMember {
@@ -82,6 +95,11 @@ enum RoomStatus {
   TRAVELING
   SETTLING
   COMPLETED
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
 }
 
 enum ExpenseCategory {

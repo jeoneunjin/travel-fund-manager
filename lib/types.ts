@@ -45,6 +45,11 @@ export interface Room {
   inviteToken: string;
 }
 
+export interface RoomInvite {
+  email: string;
+  invitedAt: string; // ISO
+}
+
 export interface SettlementRow {
   memberId: string;
   paid: number;

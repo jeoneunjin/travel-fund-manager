@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth";
-import { getRoomByToken } from "@/lib/db/room";
+import { getPendingInvites, getRoomByToken } from "@/lib/db/room";
 import { PageShell } from "@/components/site-header";
 import { InviteView } from "./invite-view";
 
@@ -23,11 +23,19 @@ export default async function InvitePage(
   }
 
   const isLoggedIn = !!session?.user;
-  const isMember = session?.user
-    ? room.members.some((m) => m.userId === session.user.id)
-    : false;
+  const me = session?.user ? room.members.find((m) => m.userId === session.user.id) : undefined;
+  const isMember = !!me;
+  const isOwner = !!me?.isOwner;
+  const invites = isOwner ? await getPendingInvites(room.id) : [];
 
   return (
-    <InviteView room={room} token={token} isLoggedIn={isLoggedIn} isMember={isMember} />
+    <InviteView
+      room={room}
+      token={token}
+      isLoggedIn={isLoggedIn}
+      isMember={isMember}
+      isOwner={isOwner}
+      invites={invites}
+    />
   );
 }
