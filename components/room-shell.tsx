@@ -15,6 +15,7 @@ import { dDayLabel, dateRangeLabel } from "@/lib/format";
 import { statusMeta } from "@/lib/constants";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { DeleteRoomButton } from "@/components/delete-room-button";
 
 const subNav = [
   { key: "dashboard", label: "대시보드", icon: LayoutDashboard, segment: "" },
@@ -84,6 +85,7 @@ export function RoomShell({
             <Users className="h-4 w-4" />
             <span>{room.members.length}명</span>
           </div>
+          <DeleteRoomButton room={room} />
         </div>
       </div>
 

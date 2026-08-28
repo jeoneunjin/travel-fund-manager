@@ -108,6 +108,18 @@ export async function getRoom(roomId: string): Promise<Room | undefined> {
   return room ? toRoom(room) : undefined;
 }
 
+// 방장 전용 — 호출부(API route)에서 isOwner 확인 후 불러야 함.
+// 연관 데이터(지출, 멤버, 초대)를 관계 역순으로 함께 삭제
+export async function deleteRoom(roomId: string): Promise<void> {
+  await prisma.$transaction([
+    prisma.expenseShare.deleteMany({ where: { expense: { roomId } } }),
+    prisma.expense.deleteMany({ where: { roomId } }),
+    prisma.roomMember.deleteMany({ where: { roomId } }),
+    prisma.roomInvite.deleteMany({ where: { roomId } }),
+    prisma.room.delete({ where: { id: roomId } }),
+  ]);
+}
+
 export async function getRoomByToken(token: string): Promise<Room | undefined> {
   const room = await fetchRoomRaw({ inviteToken: token });
   return room ? toRoom(room) : undefined;
