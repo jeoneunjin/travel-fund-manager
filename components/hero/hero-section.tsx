@@ -1,25 +1,41 @@
 "use client";
 
-import { useRef } from "react";
-import { useReducedMotion, useScroll } from "framer-motion";
-import { HeroAirplane } from "./hero-airplane";
-import { HeroCaption } from "./hero-caption";
-import { HeroHandStack } from "./hero-hand-stack";
+import Image from "next/image";
+import { motion, useReducedMotion } from "framer-motion";
+import { STAGES } from "./hero-content";
+import { HeroStageBlock } from "./hero-stage";
+import { HeroAirplaneDivider } from "./hero-airplane-divider";
 
 export function HeroSection() {
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({ target: sectionRef, offset: ["start start", "end end"] });
-  const reducedMotion = !!useReducedMotion();
+  const reducedMotion = useReducedMotion();
 
   return (
-    <section ref={sectionRef} className="relative h-[300vh]">
-      <div className="sticky top-14 flex h-[calc(100vh-3.5rem)] flex-col items-center justify-center overflow-hidden px-4">
-        <div className="relative w-full max-w-sm">
-          <HeroAirplane progress={scrollYProgress} reducedMotion={reducedMotion} />
-          <HeroHandStack progress={scrollYProgress} reducedMotion={reducedMotion} />
-        </div>
-        <HeroCaption progress={scrollYProgress} reducedMotion={reducedMotion} />
+    <div className="mx-auto max-w-5xl px-4 py-16 md:py-24">
+      {/* 시작 상태 — 빈 손 */}
+      <motion.div
+        className="relative mx-auto aspect-square w-full max-w-xs md:max-w-sm"
+        initial={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -40 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: "spring", damping: 1, stiffness: 120 }}
+      >
+        <Image
+          src="/hero/hand-empty.png"
+          alt=""
+          fill
+          priority
+          className="object-contain"
+          sizes="(max-width: 768px) 80vw, 384px"
+        />
+      </motion.div>
+
+      <div className="mt-20 space-y-20 md:mt-32 md:space-y-32">
+        {STAGES.map((stage, index) => (
+          <div key={stage.id} className="space-y-10 md:space-y-16">
+            <HeroAirplaneDivider fromLeft={index % 2 === 0} />
+            <HeroStageBlock stage={stage} imageOnLeft={index % 2 === 0} />
+          </div>
+        ))}
       </div>
-    </section>
+    </div>
   );
 }
