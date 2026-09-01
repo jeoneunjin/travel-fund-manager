@@ -22,7 +22,9 @@ export default function RootLayout({
         <Providers>
           <div className="min-h-screen bg-[hsl(210,40%,97%)]">
             <SiteHeader />
-            <main>{children}</main>
+            {/* 히어로 배너가 풀블리드(100vw)로 탈출하면서 생기는 스크롤바 폭만큼의
+                가로 오버플로우를 여기서 막음 — SiteHeader는 형제라 sticky에 영향 없음 */}
+            <main className="overflow-x-hidden">{children}</main>
           </div>
         </Providers>
       </body>
