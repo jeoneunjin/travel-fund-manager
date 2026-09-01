@@ -43,15 +43,15 @@ export function SiteHeader() {
           </span>
         </Link>
         <div className="ml-auto flex items-center gap-2">
-          <Button
-            asChild
-            variant={pathname === "/rooms" ? "secondary" : "ghost"}
-            size="sm"
-          >
-            <Link href="/rooms">내 방</Link>
-          </Button>
           {session?.user ? (
             <>
+              <Button
+                asChild
+                variant={pathname === "/rooms" ? "secondary" : "ghost"}
+                size="sm"
+              >
+                <Link href="/rooms">내 방</Link>
+              </Button>
               <span className="hidden text-sm text-muted-foreground sm:inline">
                 {session.user.name ?? session.user.email}
               </span>
