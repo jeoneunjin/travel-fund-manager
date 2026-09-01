@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import { HeroSection } from "@/components/hero/hero-section";
 
 export default function Home() {
-  redirect('/rooms');
+  return <HeroSection />;
 }
