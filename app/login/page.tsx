@@ -5,10 +5,17 @@ import { LoginForm } from "./LoginForm";
 import { LoginSocialButtons } from "./LoginSocialButtons";
 import { PageShell } from "@/components/site-header";
 
-// 내부 경로만 신뢰: "/"로 시작하되 "//"(프로토콜-상대 URL)로 시작하면 오픈 리다이렉트이므로 거부
+// 내부 경로만 신뢰: 고정 base로 해석했을 때 origin이 같아야 허용 (백슬래시 등 문자열 블랙리스트 우회 방지)
+const CALLBACK_URL_BASE = "http://localhost";
+
 function safeCallbackUrl(value: string | undefined): string | undefined {
   if (!value) return undefined;
-  return value.startsWith("/") && !value.startsWith("//") ? value : undefined;
+  try {
+    const url = new URL(value, CALLBACK_URL_BASE);
+    return url.origin === CALLBACK_URL_BASE ? `${url.pathname}${url.search}${url.hash}` : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 export default async function LoginPage(
